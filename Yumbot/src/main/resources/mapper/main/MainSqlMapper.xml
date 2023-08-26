@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yummy.yumbot.main.mapper.MainSqlMapper">
+
+	<!-- 식당검색 -->
+	<resultMap id="searchRestaurantResultMap"
+		type="com.yummy.yumbot.dto.SearchRestaurantDto">
+		<id property="restaurantDto.restaurant_pk" column="restaurant_pk" />
+		<result property="restaurantDto.category_sub_pk"
+			column="category_sub_pk" />
+		<result property="restaurantDto.id" column="id" />
+		<result property="restaurantDto.address_name"
+			column="address_name" />
+		<result property="restaurantDto.phone" column="phone" />
+		<result property="restaurantDto.place_name" column="place_name" />
+		<result property="restaurantDto.x" column="x" />
+		<result property="restaurantDto.y" column="y" />
+		<result property="category_main_name"
+			column="category_main_name" />
+		<result property="category_sub_name" column="category_sub_name" />
+		<result property="review_num" column="review_num" />
+		<result property="restaurant_likes_num"
+			column="restaurant_likes_num" />
+	</resultMap>
+	<select id="getTop5RestaurantHasReview"
+		resultMap="searchRestaurantResultMap">
+		SELECT t4.* FROM
+		(SELECT t3.*,NVL(t2.restaurant_likes_num,0)
+		restaurant_likes_num,ROWNUM rnum
+		FROM
+		(SELECT rt.*,
+		cm.category_main_name, cs.category_sub_name,t1.review_num
+		FROM
+		restaurant rt,category_main cm,category_sub cs,
+		(SELECT
+		rt.restaurant_pk, COUNT(rv.review_pk) review_num
+		FROM restaurant rt,
+		review rv
+		WHERE rt.id IN
+		<foreach collection="array" item="id" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+		AND rv.restaurant_pk = rt.restaurant_pk
+		GROUP BY rt.restaurant_pk
+		ORDER
+		BY review_num DESC) t1
+		WHERE rt.restaurant_pk=t1.restaurant_pk
+		AND
+		rt.category_sub_pk=cs.category_sub_pk
+		AND
+		cs.category_main_pk=cm.category_main_pk) t3
+		LEFT JOIN
+		(SELECT
+		rt.restaurant_pk, COUNT(rl.restaurant_likes_pk) restaurant_likes_num
+		FROM restaurant rt, restaurant_likes rl
+		WHERE rl.restaurant_pk =
+		rt.restaurant_pk
+		GROUP BY rt.restaurant_pk
+		ORDER BY restaurant_likes_num
+		DESC) t2
+		ON t3.restaurant_pk=t2.restaurant_pk)t4
+		<![CDATA[
+		WHERE t4.rnum<=5
+		]]>
+	</select>
+	<select id="getTop5RestaurantHasReviewByCategorySubList"
+		resultMap="searchRestaurantResultMap">
+		SELECT t4.* FROM
+		(SELECT t3.*,NVL(t2.restaurant_likes_num,0)
+		restaurant_likes_num,ROWNUM rnum
+		FROM
+		(SELECT rt.*,
+		cm.category_main_name, cs.category_sub_name,t1.review_num
+		FROM
+		restaurant rt,category_main cm,category_sub cs,
+		(SELECT
+		rt.restaurant_pk, COUNT(rv.review_pk) review_num
+		FROM restaurant rt,
+		review rv
+		WHERE rt.id IN
+		<foreach collection="idList" item="id" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+		AND rt.category_sub_pk IN
+		<foreach collection="categorySubList" item="id" open="("
+			close=")" separator=",">
+			#{id}
+		</foreach>
+		AND rv.restaurant_pk = rt.restaurant_pk
+		GROUP BY rt.restaurant_pk
+		ORDER
+		BY review_num DESC) t1
+		WHERE rt.restaurant_pk=t1.restaurant_pk
+		AND
+		rt.category_sub_pk=cs.category_sub_pk
+		AND
+		cs.category_main_pk=cm.category_main_pk) t3
+		LEFT JOIN
+		(SELECT
+		rt.restaurant_pk, COUNT(rl.restaurant_likes_pk) restaurant_likes_num
+		FROM restaurant rt, restaurant_likes rl
+		WHERE rl.restaurant_pk =
+		rt.restaurant_pk
+		GROUP BY rt.restaurant_pk
+		ORDER BY restaurant_likes_num
+		DESC) t2
+		ON t3.restaurant_pk=t2.restaurant_pk)t4
+		<![CDATA[
+		WHERE t4.rnum<=5
+		]]>
+	</select>
+
+
+
+	<!-- 식당 -->
+	<select id="countRestaurantHasReview" resultType="int">
+		SELECT COUNT(*)
+		FROM restaurant rt
+		WHERE rt.restaurant_pk IN (SELECT
+		rv.restaurant_pk FROM review rv)
+		AND rt.id IN
+		<foreach collection="array" item="id" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+	</select>
+	<select id="createRestaurantPk" resultType="int">
+		SELECT
+		restaurant_seq.nextval FROM dual
+	</select>
+	<insert id="createRestaurant">
+		INSERT INTO restaurant VALUES(
+		#{restaurant_pk},
+		#{category_sub_pk},
+		#{id},
+		#{address_name},
+		#{phone},
+		#{place_name},
+		#{x},
+		#{y}
+		)
+	</insert>
+	<select id="countRestaurantById" resultType="int">
+		SELECT COUNT(*) FROM
+		restaurant WHERE id=#{id}
+	</select>
+	<select id="getRestaurantByPk"
+		resultType="com.yummy.yumbot.dto.RestaurantDto">
+		SELECT * FROM restaurant WHERE
+		restaurant_pk=#{restaurant_pk}
+	</select>
+	<select id="get4RestaurantByRownumOrderByPositiveScore"
+		resultType="Map">
+		SELECT t2.restaurant_pk,t2.place_name,t2.positive_avg FROM
+		(SELECT rt.restaurant_pk,rt.place_name,t1.positive_avg,ROWNUM rnum
+		FROM restaurant rt,
+		(SELECT
+		rt.restaurant_pk,ROUND(AVG(rv.review_positive_score),2) positive_avg
+		FROM restaurant rt,review rv
+		WHERE rt.restaurant_pk IN rv.restaurant_pk
+		GROUP BY rt.restaurant_pk
+		ORDER BY positive_avg DESC,COUNT(*) DESC) t1
+		WHERE rt.restaurant_pk=t1.restaurant_pk) t2
+		WHERE t2.rnum BETWEEN
+		4*(#{i}-1)+1 AND #{i}*4
+	</select>
+	<select id="get4RestaurantByHashtagPkAndRownum" resultType="Map">
+		SELECT t2.* FROM
+		(SELECT t1.*,ROWNUM rnum FROM
+		(SELECT
+		rt.restaurant_pk,rt.place_name,ROUND(AVG(rv.review_positive_score),2) positive_avg
+		FROM review_hashtag
+		rh,restaurant rt,review rv
+		WHERE
+		rh.hashtag_pk=#{hashtag_pk}
+		AND
+		rv.review_pk=rh.review_pk
+		AND
+		rt.restaurant_pk=rv.restaurant_pk
+		GROUP BY
+		rt.restaurant_pk,rt.place_name
+		ORDER
+		BY ROUND(AVG(rv.review_positive_score),2)
+		DESC) t1) t2
+		WHERE t2.rnum
+		BETWEEN 4*(#{i}-1)+1 AND 4*#{i}
+	</select>
+
+
+	<!-- 식당좋아요 -->
+	<select id="countRestaurantLikesByRestaurantPk" resultType="int">
+		SELECT COUNT(*) FROM restaurant_likes WHERE
+		restaurant_pk=#{restaurant_pk}
+	</select>
+	<select id="getRestaurantLikesByMemberPkAndRestaurantPk"
+		resultType="com.yummy.yumbot.dto.RestaurantLikesDto">
+		SELECT * FROM restaurant_likes WHERE member_pk=#{member_pk}
+		AND restaurant_pk=#{restaurant_pk}
+	</select>
+	<insert id="createRestaurantLikes">
+		INSERT INTO restaurant_likes VALUES(
+		restaurant_likes_seq.nextval,
+		#{member_pk},
+		#{restaurant_pk},
+		sysdate
+		)
+	</insert>
+	<delete id="deleteRestaurantLikes">
+		DELETE FROM restaurant_likes WHERE
+		member_pk=#{member_pk} AND restaurant_pk=#{restaurant_pk}
+	</delete>
+
+	<!-- 리뷰 -->
+	<select id="createReviewPk" resultType="int">
+		SELECT review_seq.nextval
+		FROM dual
+	</select>
+	<insert id="createReview">
+		INSERT INTO review VALUES(
+		#{review_pk},
+		#{member_pk},
+		#{restaurant_pk},
+		#{review_content},
+		#{review_neutral_score},
+		#{review_positive_score},
+		#{review_negative_score},
+		#{review_mixed_score},
+		sysdate
+		)
+	</insert>
+	<select id="getReviewByRestaurantPkAndMostReviewLikes"
+		resultType="com.yummy.yumbot.dto.ReviewDto">
+		SELECT t2.* FROM
+		(SELECT rv.*, NVL(t1.review_likes_num,0)
+		review_likes_num, ROWNUM rnum FROM
+		review rv
+		LEFT JOIN
+		(SELECT
+		rl.review_pk,COUNT(*) review_likes_num FROM review_likes rl
+		GROUP BY
+		rl.review_pk) t1
+		ON rv.review_pk=t1.review_pk
+		WHERE
+		rv.restaurant_pk=#{restaurant_pk}
+		ORDER BY review_likes_num DESC) t2
+		WHERE rnum=1
+	</select>
+	<select id="getReviewByRestaurantPkOrderByReviewLikesNum"
+		resultType="com.yummy.yumbot.dto.ReviewDto">
+		SELECT rv.* FROM review rv
+		LEFT JOIN (
+		SELECT
+		rl.review_pk,COUNT(*) review_likes_num FROM review_likes rl
+		GROUP BY
+		rl.review_pk
+		)t1
+		ON rv.review_pk=t1.review_pk
+		WHERE
+		rv.restaurant_pk=#{restaurant_pk}
+		ORDER BY t1.review_likes_num
+	</select>
+	<select id="countReviewByRestaurantPk" resultType="int">
+		SELECT
+		COUNT(*) FROM review WHERE restaurant_pk=#{restaurant_pk}
+	</select>
+
+
+	<select id="getAvgScoreByRestaurantPk" resultType="Map">
+		SELECT
+		ROUND(AVG(rv.review_neutral_score),2) as
+		neutral_score_avg,ROUND(AVG(rv.review_positive_score),2) as
+		positive_score_avg,
+		ROUND(AVG(rv.review_negative_score),2)
+		negative_score_avg,ROUND(AVG(rv.review_mixed_score),2)
+		mixed_score_avg
+		FROM review rv
+		WHERE rv.restaurant_pk=#{restaurant_pk}
+	</select>
+
+
+
+	<!-- 리뷰좋아요 -->
+	<select id="countReviewLikesByReviewPk" resultType="int">
+		SELECT
+		COUNT(*) FROM review_likes WHERE review_pk=#{review_pk}
+	</select>
+	<select id="getReviewLikesByMemberPkAndReviewPk"
+		resultType="com.yummy.yumbot.dto.ReviewLikesDto">
+		SELECT * FROM review_likes WHERE review_pk=#{review_pk} AND
+		member_pk=#{member_pk}
+	</select>
+	<insert id="createReviewLikes">
+		INSERT INTO review_likes VALUES(
+		review_likes_seq.nextval,
+		#{member_pk},
+		#{review_pk},
+		sysdate
+		)
+	</insert>
+	<delete id="deleteReviewLikes">
+		DELETE FROM review_likes WHERE review_pk=#{review_pk}
+		AND member_pk=#{member_pk}
+	</delete>
+
+
+	<!-- 리뷰사진 -->
+	<select id="getReviewImagesByReviewPk"
+		resultType="com.yummy.yumbot.dto.ReviewImagesDto">
+		SELECT * FROM review_images WHERE review_pk=#{review_pk}
+	</select>
+	<insert id="createReviewImages">
+		INSERT INTO review_images VALUES(
+		review_images_seq.nextval,
+		#{review_pk},
+		#{review_images_link}
+		)
+	</insert>
+	<select id="getReviewImagesByRestaurantPk"
+		resultType="com.yummy.yumbot.dto.ReviewImagesDto">
+		SELECT ri.* FROM review rv,review_images ri
+		WHERE
+		rv.restaurant_pk=#{restaurant_pk}
+		AND rv.review_pk IN ri.review_pk
+	</select>
+	<!-- 해시태그 -->
+	<select id="createHashtagPk" resultType="int">
+		SELECT
+		hashtag_seq.nextval FROM DUAL
+	</select>
+	<insert id="createHashtag">
+		INSERT INTO hashtag VALUES(
+		#{hashtag_pk},
+		#{hashtag_category_pk},
+		#{hashtag_name}
+		)
+	</insert>
+	<select id="getHashtagByName"
+		resultType="com.yummy.yumbot.dto.HashtagDto">
+		SELECT * FROM hashtag WHERE hashtag_name=#{hastag_name}
+	</select>
+	<select id="getHashtagByPk"
+		resultType="com.yummy.yumbot.dto.HashtagDto">
+		SELECT * FROM hashtag WHERE hashtag_pk=#{hashtag_pk}
+	</select>
+	<select id="getHashtagByCategoryPk"
+		resultType="com.yummy.yumbot.dto.HashtagDto">
+		SELECT * FROM hashtag WHERE
+		hashtag_category_pk=#{hashtag_category_pk}
+	</select>
+	<select id="getTop3HashtagByRestaurantPk"
+		resultType="com.yummy.yumbot.dto.HashtagDto">
+		SELECT h.* FROM hashtag h,
+		(SELECT rh.hashtag_pk,ROWNUM rnum FROM
+		review_hashtag rh
+		WHERE rh.review_pk IN
+		(SELECT rv.review_pk FROM review
+		rv WHERE
+		rv.restaurant_pk=#{restaurant_pk})
+		GROUP BY
+		rh.hashtag_pk,ROWNUM
+		ORDER BY COUNT(*) DESC) t1
+		WHERE
+		h.hashtag_pk=t1.hashtag_pk
+		<![CDATA[
+		AND t1.rnum<=3
+		]]>
+	</select>
+	<select id="getTop5Hashtag"
+		resultType="com.yummy.yumbot.dto.HashtagDto">
+		SELECT t3.* FROM
+		(SELECT t2.*,ROWNUM rnum FROM
+		(SELECT h.*,t1.hashtag_num FROM hashtag h,
+		(SELECT rh.hashtag_pk,COUNT(*) hashtag_num FROM review_hashtag rh
+		WHERE rh.hashtag_pk IN
+		(SELECT h.hashtag_pk FROM hashtag h WHERE h.hashtag_category_pk=4)
+		GROUP BY rh.hashtag_pk) t1
+		WHERE h.hashtag_pk =t1.hashtag_pk
+		ORDER BY t1.hashtag_num DESC) t2) t3
+		<![CDATA[
+		WHERE t3.rnum<=5
+		]]>
+	</select>
+
+	<!-- 식당해시태그+해시태그수 -->
+	<resultMap
+		type="com.yummy.yumbot.dto.RestaurantHashtagInfoDto"
+		id="restaurantHashtagInfoResultMap">
+		<id property="hashtagDto.hashtag_pk" column="hashtag_pk" />
+		<result property="hashtagDto.hashtag_category_pk"
+			column="hashtag_category_pk" />
+		<result property="hashtagDto.hashtag_name"
+			column="hashtag_name" />
+		<result property="review_hashtag_num"
+			column="review_hashtag_num" />
+	</resultMap>
+	<select
+		id="getRestaurantHashtagInfoByRestaurantPkAndHashtagCategoryPkOrderByReviewHashtagNum"
+		resultMap="restaurantHashtagInfoResultMap">
+		SELECT h.*,t1.review_hashtag_num FROM hashtag h,
+		(SELECT
+		rh.hashtag_pk,COUNT(*) review_hashtag_num FROM review_hashtag rh
+		WHERE
+		rh.review_pk IN
+		(SELECT rv.review_pk FROM review rv WHERE
+		rv.restaurant_pk=#{restaurant_pk})
+		GROUP BY rh.hashtag_pk) t1
+		WHERE
+		h.hashtag_pk=t1.hashtag_pk
+		AND
+		h.hashtag_category_pk=#{hashtag_category_pk}
+		ORDER BY
+		t1.review_hashtag_num DESC
+	</select>
+
+	<!-- 리뷰해시태그 -->
+
+	<select id="getReviewHashtagByReviewPk"
+		resultType="com.yummy.yumbot.dto.ReviewHashtagDto">
+		SELECT * FROM review_hashtag WHERE review_pk=#{review_pk}
+	</select>
+	<insert id="createReviewHashtag">
+		INSERT INTO review_hashtag VALUES(
+		review_hashtag_seq.nextval,
+		#{review_pk},
+		#{hashtag_pk}
+		)
+	</insert>
+
+
+	<!-- 해시태그카테고리 -->
+	<select id="getAllHashtagCategory"
+		resultType="com.yummy.yumbot.dto.HashtagCategoryDto">
+		SELECT * FROM hashtag_category
+	</select>
+
+
+	<!-- 메인카테고리 -->
+	<select id="getCategoryMainByName"
+		resultType="com.yummy.yumbot.dto.CategoryMainDto">
+		SELECT * FROM category_main WHERE
+		category_main_name=#{category_main_name}
+	</select>
+	<select id="createCategoryMainPk" resultType="int">
+		SELECT
+		category_main_seq.nextval FROM dual
+	</select>
+	<insert id="createCategoryMain">
+		INSERT INTO category_main VALUES(
+		#{category_main_pk},
+		#{category_main_name}
+		)
+	</insert>
+	<select id="getCategoryMainByPk"
+		resultType="com.yummy.yumbot.dto.CategoryMainDto">
+		SELECT * FROM category_main WHERE
+		category_main_pk=#{category_main_pk}
+	</select>
+
+
+
+	<!-- 서브카테고리 -->
+	<select id="getCategorySubByName"
+		resultType="com.yummy.yumbot.dto.CategorySubDto">
+		SELECT * FROM category_sub WHERE
+		category_sub_name=#{category_sub_name}
+	</select>
+	<select id="createCategorySubPk" resultType="int">
+		SELECT
+		category_sub_seq.nextval FROM dual
+	</select>
+	<insert id="createCategorySub">
+		INSERT INTO category_sub VALUES(
+		#{category_sub_pk},
+		#{category_main_pk},
+		#{category_sub_name}
+		)
+	</insert>
+	<select id="getCategorySubByPk"
+		resultType="com.yummy.yumbot.dto.CategorySubDto">
+		SELECT * FROM category_sub WHERE
+		category_sub_pk=#{category_sub_pk}
+	</select>
+	<select id="getAllCategorySub"
+		resultType="com.yummy.yumbot.dto.CategorySubDto">
+		SELECT * FROM category_sub
+	</select>
+</mapper>
