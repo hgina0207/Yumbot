@@ -52,7 +52,7 @@ public class MainServiceImpl {
 
 	public List<Map<String, Object>> getTop5RestaurantHasReview(String[] idList) {
 		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
-
+		
 		List<SearchRestaurantDto> searchRestaurantDtoList = mainSqlMapper.getTop5RestaurantHasReview(idList);
 		for (SearchRestaurantDto searchRestaurantDto : searchRestaurantDtoList) {
 			Map<String, Object> map = new HashMap<String, Object>();
@@ -62,9 +62,10 @@ public class MainServiceImpl {
 			MemberDto memberDto = memberSqlMapper.getMemberByPk(reviewDto.getMember_pk());
 			List<ReviewImagesDto> reviewImagesDtoList = mainSqlMapper
 					.getReviewImagesByReviewPk(reviewDto.getReview_pk());
-			
-			Map<String,Object> score=mainSqlMapper.getAvgScoreByRestaurantPk(searchRestaurantDto.getRestaurantDto().getRestaurant_pk());
-			
+
+			Map<String, Object> score = mainSqlMapper
+					.getAvgScoreByRestaurantPk(searchRestaurantDto.getRestaurantDto().getRestaurant_pk());
+
 			map.put("score", score);
 			map.put("searchRestaurantDto", searchRestaurantDto);
 			map.put("reviewDto", reviewDto);
@@ -178,7 +179,7 @@ public class MainServiceImpl {
 			}
 
 			MemberDto memberDto = memberSqlMapper.getMemberByPk(reviewDto.getMember_pk());
-			
+
 			map.put("reviewDto", reviewDto);
 			map.put("reviewImagesDtoList", reviewImagesDtoList);
 			map.put("review_likes_num", review_likes_num);
@@ -355,6 +356,9 @@ public class MainServiceImpl {
 				.getTop5RestaurantHasReviewByCategorySubList(idList, categorySubList);
 		for (SearchRestaurantDto searchRestaurantDto : searchRestaurantDtoList) {
 			Map<String, Object> map = new HashMap<String, Object>();
+			
+			Map<String, Object> score = mainSqlMapper
+					.getAvgScoreByRestaurantPk(searchRestaurantDto.getRestaurantDto().getRestaurant_pk());
 
 			ReviewDto reviewDto = mainSqlMapper.getReviewByRestaurantPkAndMostReviewLikes(
 					searchRestaurantDto.getRestaurantDto().getRestaurant_pk());
@@ -362,6 +366,7 @@ public class MainServiceImpl {
 			List<ReviewImagesDto> reviewImagesDtoList = mainSqlMapper
 					.getReviewImagesByReviewPk(reviewDto.getReview_pk());
 
+			map.put("score", score);
 			map.put("searchRestaurantDto", searchRestaurantDto);
 			map.put("reviewDto", reviewDto);
 			map.put("reviewImagesDtoList", reviewImagesDtoList);
@@ -378,8 +383,8 @@ public class MainServiceImpl {
 		for (int i = 1; i <= 5; i++) {
 			List<Map<String, Object>> restaurantDatas = new ArrayList<>();
 			List<Map<String, Object>> restaurant4Data = mainSqlMapper.get4RestaurantByRownumOrderByPositiveScore(i);
-			
-			if (restaurant4Data.size()!=0) {
+
+			if (restaurant4Data.size() != 0) {
 				for (Map<String, Object> restaurantData : restaurant4Data) {
 					Map<String, Object> map = new HashMap<>();
 
@@ -392,7 +397,7 @@ public class MainServiceImpl {
 					restaurantDatas.add(map);
 				}
 				restaurantRankingDataList.add(restaurantDatas);
-			}else {
+			} else {
 				break;
 			}
 		}
@@ -401,13 +406,13 @@ public class MainServiceImpl {
 	}
 
 	public void toggleRestaurantLike(RestaurantLikesDto params) {
-		RestaurantLikesDto restaurantLikesDto=mainSqlMapper.getRestaurantLikesByMemberPkAndRestaurantPk(params);
-		if(restaurantLikesDto==null) {
+		RestaurantLikesDto restaurantLikesDto = mainSqlMapper.getRestaurantLikesByMemberPkAndRestaurantPk(params);
+		if (restaurantLikesDto == null) {
 			mainSqlMapper.createRestaurantLikes(params);
-		}else {
+		} else {
 			mainSqlMapper.deleteRestaurantLikes(params);
 		}
-		
+
 	}
 
 	public int getRestaurantLikesByRestaurantPk(int restaurant_pk) {
@@ -415,22 +420,22 @@ public class MainServiceImpl {
 	}
 
 	public int getRestaurantlikedStatus(RestaurantLikesDto params) {
-		RestaurantLikesDto restaurantLikesDto=mainSqlMapper.getRestaurantLikesByMemberPkAndRestaurantPk(params);
-		if(restaurantLikesDto==null) {
+		RestaurantLikesDto restaurantLikesDto = mainSqlMapper.getRestaurantLikesByMemberPkAndRestaurantPk(params);
+		if (restaurantLikesDto == null) {
 			return 0;
-		}else {
+		} else {
 			return 1;
 		}
 	}
 
 	public void toggleReviewLike(ReviewLikesDto params) {
-		ReviewLikesDto reviewLikesDto=mainSqlMapper.getReviewLikesByMemberPkAndReviewPk(params);
-		if(reviewLikesDto==null) {
+		ReviewLikesDto reviewLikesDto = mainSqlMapper.getReviewLikesByMemberPkAndReviewPk(params);
+		if (reviewLikesDto == null) {
 			mainSqlMapper.createReviewLikes(params);
-		}else {
+		} else {
 			mainSqlMapper.deleteReviewLikes(params);
 		}
-		
+
 	}
 
 	public int getReviewLikesByReviewPk(int review_pk) {
@@ -438,27 +443,27 @@ public class MainServiceImpl {
 	}
 
 	public int getReviewlikedStatus(ReviewLikesDto params) {
-		ReviewLikesDto reviewLikesDto=mainSqlMapper.getReviewLikesByMemberPkAndReviewPk(params);
-		if(reviewLikesDto==null) {
+		ReviewLikesDto reviewLikesDto = mainSqlMapper.getReviewLikesByMemberPkAndReviewPk(params);
+		if (reviewLikesDto == null) {
 			return 0;
-		}else {
+		} else {
 			return 1;
 		}
 	}
 
 	public List<Map<String, Object>> getTop20RestaurantListByTop5HashtagNum() {
-		List<Map<String,Object>> result=new ArrayList<>();
-		
-		
-		List<HashtagDto> hashtagDtoList=mainSqlMapper.getTop5Hashtag();
-		
-		for(HashtagDto hashtagDto:hashtagDtoList) {
-			Map<String,Object> restaurantPerHashtag=new HashMap<>();
-			List<List<Map<String, Object>>> restaurant20=new ArrayList<>();
-			for(int i=1;i<=5;i++) {
+		List<Map<String, Object>> result = new ArrayList<>();
+
+		List<HashtagDto> hashtagDtoList = mainSqlMapper.getTop5Hashtag();
+
+		for (HashtagDto hashtagDto : hashtagDtoList) {
+			Map<String, Object> restaurantPerHashtag = new HashMap<>();
+			List<List<Map<String, Object>>> restaurant20 = new ArrayList<>();
+			for (int i = 1; i <= 5; i++) {
 				List<Map<String, Object>> restaurantDatas = new ArrayList<>();
-				List<Map<String, Object>> restaurant4Data=mainSqlMapper.get4RestaurantByHashtagPkAndRownum(hashtagDto.getHashtag_pk(),i);
-				if (restaurant4Data.size()!=0) {
+				List<Map<String, Object>> restaurant4Data = mainSqlMapper
+						.get4RestaurantByHashtagPkAndRownum(hashtagDto.getHashtag_pk(), i);
+				if (restaurant4Data.size() != 0) {
 					for (Map<String, Object> restaurantData : restaurant4Data) {
 						Map<String, Object> map = new HashMap<>();
 
@@ -470,25 +475,29 @@ public class MainServiceImpl {
 
 						restaurantDatas.add(map);
 					}
-					
+
 					restaurant20.add(restaurantDatas);
-					System.out.println(restaurant20.get(i-1));
-					
-				}else {
+					System.out.println(restaurant20.get(i - 1));
+
+				} else {
 					break;
 				}
 			}
 			restaurantPerHashtag.put("restaurant20", restaurant20);
 			restaurantPerHashtag.put("hashtagDto", hashtagDto);
-			
+
 			System.out.println(hashtagDto.toString());
-			
-			System.out.println("restaurant20:"+restaurant20.toString());
-			
+
+			System.out.println("restaurant20:" + restaurant20.toString());
+
 			result.add(restaurantPerHashtag);
 		}
-		
+
 		return result;
+	}
+
+	public List<CategorySubDto> getCategorySubListByIdList(String[] idList) {
+		return mainSqlMapper.getCategorySubListByIdList(idList);
 	}
 
 }

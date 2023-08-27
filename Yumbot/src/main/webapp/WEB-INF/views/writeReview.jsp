@@ -22,14 +22,12 @@
 </style>
 </head>
 <body>
-	<div class="container" style="margin: 0 0;">
-
 		<div class="row">
 			<div class="col">
 				<jsp:include page="./common/topNavi.jsp"></jsp:include>
 			</div>
 		</div>
-		<div class="row bg-light" id="searchResultBox" style="width: 1900px;">
+		<div class="row bg-light" id="searchResultBox">
 			<div class="col-1 my-3 ms-auto me-3 bg-white rounded-4 px-0">
 				<img class="w-100" src="/yumbot/resources/img/광고바.PNG">
 			</div>
@@ -191,8 +189,6 @@
 				</div>
 			</div>
 		</div>
-
-	</div>
 
 	<script type="text/javascript">
 		function createHashtag(hashtag_category_pk, event) {

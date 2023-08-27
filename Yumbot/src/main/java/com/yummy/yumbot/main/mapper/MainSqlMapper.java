@@ -118,6 +118,8 @@ public interface MainSqlMapper {
 
 	public void deleteReviewLikes(ReviewLikesDto params);
 
+	public List<CategorySubDto> getCategorySubListByIdList(String[] idList);
+
 
 	
 }

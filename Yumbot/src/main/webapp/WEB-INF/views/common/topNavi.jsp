@@ -16,7 +16,7 @@
 	rel="stylesheet">
 </head>
 <body>
-	<div class="row" style="width: 1900px;">
+	<div class="row" style="width: 100%;">
 		<div class="col">
 			<div class="row my-4">
 				<div class="col-2 my-3 ms-auto me-3 px-0 text-end">

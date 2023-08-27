@@ -171,7 +171,8 @@
 		SELECT t2.* FROM
 		(SELECT t1.*,ROWNUM rnum FROM
 		(SELECT
-		rt.restaurant_pk,rt.place_name,ROUND(AVG(rv.review_positive_score),2) positive_avg
+		rt.restaurant_pk,rt.place_name,ROUND(AVG(rv.review_positive_score),2)
+		positive_avg
 		FROM review_hashtag
 		rh,restaurant rt,review rv
 		WHERE
@@ -183,7 +184,8 @@
 		GROUP BY
 		rt.restaurant_pk,rt.place_name
 		ORDER
-		BY ROUND(AVG(rv.review_positive_score),2)
+		BY
+		ROUND(AVG(rv.review_positive_score),2)
 		DESC) t1) t2
 		WHERE t2.rnum
 		BETWEEN 4*(#{i}-1)+1 AND 4*#{i}
@@ -372,13 +374,18 @@
 		resultType="com.yummy.yumbot.dto.HashtagDto">
 		SELECT t3.* FROM
 		(SELECT t2.*,ROWNUM rnum FROM
-		(SELECT h.*,t1.hashtag_num FROM hashtag h,
-		(SELECT rh.hashtag_pk,COUNT(*) hashtag_num FROM review_hashtag rh
+		(SELECT
+		h.*,t1.hashtag_num FROM hashtag h,
+		(SELECT rh.hashtag_pk,COUNT(*)
+		hashtag_num FROM review_hashtag rh
 		WHERE rh.hashtag_pk IN
-		(SELECT h.hashtag_pk FROM hashtag h WHERE h.hashtag_category_pk=4)
-		GROUP BY rh.hashtag_pk) t1
+		(SELECT
+		h.hashtag_pk FROM hashtag h WHERE h.hashtag_category_pk=4)
+		GROUP BY
+		rh.hashtag_pk) t1
 		WHERE h.hashtag_pk =t1.hashtag_pk
-		ORDER BY t1.hashtag_num DESC) t2) t3
+		ORDER BY
+		t1.hashtag_num DESC) t2) t3
 		<![CDATA[
 		WHERE t3.rnum<=5
 		]]>
@@ -486,5 +493,16 @@
 	<select id="getAllCategorySub"
 		resultType="com.yummy.yumbot.dto.CategorySubDto">
 		SELECT * FROM category_sub
+	</select>
+	<select id="getCategorySubListByIdList"
+		resultType="com.yummy.yumbot.dto.CategorySubDto">
+		SELECT cs.* FROM category_sub cs WHERE cs.category_sub_pk IN (SELECT
+		r.category_sub_pk FROM restaurant r WHERE r.id IN
+		<foreach collection="array" item="id" open="(" close=")"
+			separator=",">
+			#{id}
+		</foreach>
+		 AND r.restaurant_pk IN (SELECT rv.restaurant_pk FROM review rv)
+		)
 	</select>
 </mapper>

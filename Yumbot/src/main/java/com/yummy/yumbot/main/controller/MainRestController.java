@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yummy.yumbot.dto.CategorySubDto;
 import com.yummy.yumbot.dto.HashtagDto;
 import com.yummy.yumbot.dto.MemberDto;
 import com.yummy.yumbot.dto.RestaurantDto;
@@ -59,6 +60,7 @@ public class MainRestController {
 
 		List<Map<String, Object>> restaurantList = mainService.getRestaurantListByCategorySubPkAndIdList(idList,
 				categorySubList);
+		System.out.println(restaurantList.toString());
 		int restaurantNum = restaurantList.size();
 
 		map.put("restaurantList", restaurantList);
@@ -76,8 +78,7 @@ public class MainRestController {
 		restaurantLikesDto.setRestaurant_pk(restaurant_pk);
 
 		mainService.toggleRestaurantLike(restaurantLikesDto);
-		
-		
+
 	}
 
 	@RequestMapping("getRestaurantLikes")
@@ -85,62 +86,64 @@ public class MainRestController {
 		Map<String, Object> map = new HashMap<>();
 
 		MemberDto memberUser = (MemberDto) session.getAttribute("memberUser");
-		if(memberUser!=null) {
+		if (memberUser != null) {
 			RestaurantLikesDto restaurantLikesDto = new RestaurantLikesDto();
 			restaurantLikesDto.setMember_pk(memberUser.getMember_pk());
 			restaurantLikesDto.setRestaurant_pk(restaurant_pk);
-			
 
-			int likedStatus=mainService.getRestaurantlikedStatus(restaurantLikesDto);
-			
+			int likedStatus = mainService.getRestaurantlikedStatus(restaurantLikesDto);
+
 			map.put("likedStatus", likedStatus);
 		}
-		
-		
+
 		int likesNum = mainService.getRestaurantLikesByRestaurantPk(restaurant_pk);
-		
+
 		map.put("likesNum", likesNum);
-		
+
 		return map;
 	}
-	
-	
+
 	@RequestMapping("toggleReviewLike")
 	public void toggleReviewLike(HttpSession session, int review_pk) {
 
 		MemberDto memberUser = (MemberDto) session.getAttribute("memberUser");
-		ReviewLikesDto reviewLikesDto=new ReviewLikesDto();
+		ReviewLikesDto reviewLikesDto = new ReviewLikesDto();
 		reviewLikesDto.setMember_pk(memberUser.getMember_pk());
 		reviewLikesDto.setReview_pk(review_pk);
 
 		mainService.toggleReviewLike(reviewLikesDto);
-		
-		
+
 	}
-	
+
+	@RequestMapping("getCategorySubListByIdList")
+	public Map<String,Object> getCategorySubListByIdList(String[] idList) {
+		Map<String, Object> map = new HashMap<>();
+		List<CategorySubDto> categorySubList=mainService.getCategorySubListByIdList(idList);
+		
+		map.put("categorySubList", categorySubList);
+		return map;
+	}
 	
 	@RequestMapping("getReviewLikes")
 	public Map<String, Object> getReviewLikes(HttpSession session, int review_pk) {
 		Map<String, Object> map = new HashMap<>();
-		
-		
+
 		MemberDto memberUser = (MemberDto) session.getAttribute("memberUser");
-		if(memberUser!=null) {
-			ReviewLikesDto reviewLikesDto=new ReviewLikesDto();
+		if (memberUser != null) {
+			ReviewLikesDto reviewLikesDto = new ReviewLikesDto();
 			reviewLikesDto.setMember_pk(memberUser.getMember_pk());
 			reviewLikesDto.setReview_pk(review_pk);
-			
-			int likedStatus=mainService.getReviewlikedStatus(reviewLikesDto);
+
+			int likedStatus = mainService.getReviewlikedStatus(reviewLikesDto);
 
 			map.put("likedStatus", likedStatus);
 		}
-		
 
 		int likesNum = mainService.getReviewLikesByReviewPk(review_pk);
-		
+
 		map.put("likesNum", likesNum);
-		
+
 		return map;
-		
+
 	}
 }
