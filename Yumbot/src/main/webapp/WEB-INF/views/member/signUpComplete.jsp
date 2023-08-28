@@ -19,7 +19,7 @@
 				YUMBOT
 			</div>
 		</div>
-		<div class="row text-center">
+		<div class="row text-center mb-5">
 			<div class="col-3"></div>
 			<div class="col border py-4">
 				<div class="row my-2">

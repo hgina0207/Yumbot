@@ -155,17 +155,19 @@
 	<select id="get4RestaurantByRownumOrderByPositiveScore"
 		resultType="Map">
 		SELECT t2.restaurant_pk,t2.place_name,t2.positive_avg FROM
-		(SELECT rt.restaurant_pk,rt.place_name,t1.positive_avg,ROWNUM rnum
+		(SELECT rt.restaurant_pk,rt.place_name,t3.positive_avg,t3.rnum
 		FROM restaurant rt,
+        (SELECT t1.*,ROWNUM rnum FROM 
 		(SELECT
-		rt.restaurant_pk,ROUND(AVG(rv.review_positive_score),2) positive_avg
-		FROM restaurant rt,review rv
-		WHERE rt.restaurant_pk IN rv.restaurant_pk
-		GROUP BY rt.restaurant_pk
-		ORDER BY positive_avg DESC,COUNT(*) DESC) t1
-		WHERE rt.restaurant_pk=t1.restaurant_pk) t2
-		WHERE t2.rnum BETWEEN
+		rt1.restaurant_pk,ROUND(AVG(rv.review_positive_score),2) positive_avg
+		FROM restaurant rt1,review rv
+		WHERE rt1.restaurant_pk IN rv.restaurant_pk
+		GROUP BY rt1.restaurant_pk
+		ORDER BY positive_avg DESC,COUNT(*) DESC) t1) t3
+		WHERE rt.restaurant_pk=t3.restaurant_pk
+		AND t3.rnum BETWEEN
 		4*(#{i}-1)+1 AND #{i}*4
+        ORDER BY t3.rnum) t2
 	</select>
 	<select id="get4RestaurantByHashtagPkAndRownum" resultType="Map">
 		SELECT t2.* FROM

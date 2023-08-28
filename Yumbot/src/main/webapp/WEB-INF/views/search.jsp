@@ -27,7 +27,7 @@
 			<div class="col-1 my-3 ms-auto me-3 rounded-4 px-0">
 				<img class="w-100" src="/yumbot/resources/img/광고바.PNG">
 			</div>
-			<div class="col-5 my-3 me-auto ms-3 bg-white">
+			<div class="col-6 my-3 me-auto ms-3 bg-white">
 				<div class="row">
 					<div class="col">
 						<div class="row my-2">

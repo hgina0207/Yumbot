@@ -17,7 +17,7 @@
 			<div class="col text-center fs-1 fw-bold align-self-center">
 				YUMBOT</div>
 		</div>
-		<div class="row">
+		<div class="row mb-5">
 			<div class="col"></div>
 			<div class="col border rounded-4 text-center">
 				<div class="row py-2 text-start">

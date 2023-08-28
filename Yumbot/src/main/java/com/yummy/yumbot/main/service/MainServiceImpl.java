@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yummy.yumbot.dto.CategoryMainDto;
 import com.yummy.yumbot.dto.CategorySubDto;
 import com.yummy.yumbot.dto.HashtagCategoryDto;
@@ -203,7 +205,16 @@ public class MainServiceImpl {
 		result.put("category1HashtagInfoDtoList", category1HashtagInfoDtoList);
 		result.put("category2HashtagInfoDtoList", category2HashtagInfoDtoList);
 		result.put("category3HashtagInfoDtoList", category3HashtagInfoDtoList);
-
+		
+		ObjectMapper objectMapper=new ObjectMapper();
+		String json;
+		try {
+			json = objectMapper.writeValueAsString(result);
+			result.put("jsonData", json);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return result;
 	}
 
